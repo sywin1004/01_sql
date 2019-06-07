@@ -510,9 +510,172 @@ ORA-00904: "급여평균": 부적합한 식별자
  3. GROUP BY    절에 나온 컬럼, 식(함수 식) 으로 그룹화 진행
  4. HAVING      절의 조건을 만족시키는 그룹행만 선택
  5.             4까지 선택된 그룹 정보를 가진 행에 대해서
- 6.SELECT       절에 명시된 칼럼, 식(함수 식)만 출력
- 7.ORDER BY     가 있다면 정렬 조건에 맞추어 최종 정렬하여 결과 출력
+ 6. SELECT       절에 명시된 칼럼, 식(함수 식)만 출력
+ 7. ORDER BY     가 있다면 정렬 조건에 맞추어 최종 정렬하여 결과 출력
 */
+
+-----------------------------------------------------------------------------------------
+--수업중 실습
+-- 1. 매니저별, 부하직원의 수를 구하고, 많은 순으로 정렬
+--   : mgr 컬럼이 그룹화 기준 컬럼
+SELECT e.mgr
+     , COUNT(e.mgr) "부하직원 수"
+  FROM emp e
+ GROUP BY e.mgr
+ ORDER BY "부하직원 수" DESC
+;
+/*
+MGR, 부하직원 수
+-------------------------
+7698	5
+7839	3
+7566	1
+7782	1
+7902	1
+(null)  0
+*/
+-- 2.1 부서별 인원을 구하고, 인원수 많은 순으로 정렬
+--    : deptno 컬럼이 그룹화 기준 컬럼
+SELECT e.deptno
+     , COUNT(e.deptno) "부서별 인원"
+  FROM emp e
+ GROUP BY e.deptno
+ ORDER BY  "부서별 인원" DESC
+;
+/*
+DEPTNO, 부서별 인원
+30	        6
+20	        3
+10	        3
+(null)      0
+*/
+-- 2.2  deptno 가 null인 컬럼은 '부서 배치 미배정' 으로 출력되도록 처리
+SELECT NVL(to_char(e.deptno),'부서 미배정') 부서번호
+  FROM emp e
+ GROUP BY e.deptno
+;
+/*
+부서번호
+-----------
+30
+부서 미배정
+10
+20
+*/
+-- 3.1 직무별 급여 평균 구하고, 급여평균 높은 순으로 정렬
+--   : job 이 그룹화 기준 컬럼
+SELECT e.job
+     , to_char(AVG(e.sal), '$9,999.99') 급여평균
+  FROM emp e
+ GROUP BY e.job
+ ORDER BY 급여평균 DESC
+;
+/*
+JOB,        급여평균
+-------------------------	
+PRESIDENT	 $5,000.00
+ANALYST	     $3,000.00
+MANAGER	     $2,758.33
+SALESMAN	 $1,400.00
+CLERK	     $1,016.67
+*/
+-- 3.2 job 이 null 인 데이터 처리
+SELECT NVL(e.job, '직무없음') 직무
+     , NVL(to_char(AVG(e.sal), '$9,999.99'),'급여 없음') 급여평균
+  FROM emp e
+ GROUP BY e.job
+ ORDER BY 급여평균 DESC
+;
+/*
+직무,         급여평균
+--------------------------
+직무없음	급여 없음
+PRESIDENT	 $5,000.00
+ANALYST	     $3,000.00
+MANAGER	     $2,758.33
+SALESMAN	 $1,400.00
+CLERK	     $1,016.67
+*/
+-- 4. 직무별 급여 총합 구하고, 총합 높은 순으로 정렬
+--   : job 이 그룹화 기준 컬럼
+SELECT e.job
+     , SUM(e.sal) 급여총합
+  FROM emp e
+ GROUP BY e.job
+ ORDER BY 급여총합 DESC
+;
+/*
+JOB,    급여총합	
+---------------------
+MANAGER	    8275
+SALESMAN	5600
+PRESIDENT	5000
+CLERK	    3050
+ANALYST	    3000
+*/
+-- 5. 급여의 앞단위가 1000미만, 1000, 2000, 3000, 5000 별로 인원수를 구하시오
+--    급여 단위 오름차순으로 정렬
+SELECT trunc(e.sal,-3) 급여정리
+     , COUNT(trunc(e.sal,-3)) 인원수
+  FROM emp e
+ GROUP BY trunc(e.sal,-3)
+ ORDER BY 급여정리 
+;
+SELECT trunc(e.sal,-3) 급여정리
+     , COUNT(*) 인원수
+  FROM emp e
+ GROUP BY trunc(e.sal,-3)
+ ORDER BY 급여정리 
+;
+SELECT trunc(e.sal,-3)  급여정리
+     , COUNT(*) 인원수
+  FROM emp e
+ GROUP BY trunc(e.sal,-3)
+ ORDER BY 급여정리 
+;
+-- 6. 직무별 급여 합의 단위를 구하고, 급여 합의 단위가 큰 순으로 정렬
+SELECT e.job
+     , trunc(SUM(e.sal), -3) 급여총합  
+  FROM emp e
+ GROUP BY e.job
+ ORDER BY 급여총합 DESC
+;
+/*
+JOB,    급여총합
+------------------------
+SALESMAN	5600
+PRESIDENT	5000
+MANAGER	    8275
+CLERK	    3050
+ANALYST 	3000
+*/
+
+-- 7. 직무별 급여 평균이 2000이하인 경우를 구하고 평균이 높은 순으로 정렬
+SELECT e.job
+     , AVG(e.sal) 급여평균
+  FROM emp e
+ GROUP BY e.job
+HAVING AVG(e.sal) <= 2000
+ ORDER BY 급여평균 DESC
+;
+/*
+JOB,        급여평균
+------------------------
+SALESMAN	1400
+CLERK	    1016.666666666666666666666666666666666667
+*/
+-- 8. 년도별 입사 인원을 구하시오
+SELECT e.hiredate 년도
+     , to_date(COUNT(e.hiredate), 'YYYY') 입사인원
+  FROM emp e
+ GROUP BY e.hiredate
+;
+/*
+년도,     입사인원
+-------------------------
+
+*/
+
 
 
 
