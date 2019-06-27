@@ -1,3 +1,21 @@
+-- day 10
+---- 7. 조인과 서브쿼리
+-- (1) 조인 : JOIN
+--    하나 이상의 테이블을 논리적으로 묶어서 하나의 테이블인 것 처럼 다루는 기술
+--    조인을 발생시키려면 FROM 절에 조인에 사용할 테이블을 나열
+
+-- 문제) 직원의 소속 부서 번호가 아닌 부서 명을 같이 조회하고 싶다.
+-- a) FROM 절에 테이블을 나열
+--    emp, dept 두 테이블을 나열 ==> 조인이 발생 ==> 두 테이블의 모든 조합
+/* 7777, 8888, 9999 직원정보 삭제
+DELETE FROM "SCOTT"."EMP" WHERE EMPNO = 7777
+DELETE FROM "SCOTT"."EMP" WHERE EMPNO = 8888
+DELETE FROM "SCOTT"."EMP" WHERE EMPNO = 9999
+COMMIT;
+*/
+
+
+-- a) FROM 절에 테이블 나열로 조인 발생
 SELECT e.empno
      , e.ename
      , e.deptno
@@ -166,11 +184,13 @@ SELECT e.empno
 ;
 
 -- OUTER JOIN 예를 만들기 위해 부서번호가 NULL 인 데이터 생성
-/*
 
+/*
 INSERT INTO "SCOTT"."EMP" (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL) VALUES ('7777', 'JJ', 'CLERK', '7902', TO_DATE('2019-06-27 13:09:04', 'YYYY-MM-DD HH24:MI:SS'), '900')
 INSERT INTO "SCOTT"."EMP" (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM) VALUES ('8888', 'J_JAMES', 'SALESMAN', '7698', TO_DATE('2019-06-07 13:10:41', 'YYYY-MM-DD HH24:MI:SS'), '1250', '200')
 COMMIT;
+INSERT INTO "SCOTT"."EMP" (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL) VALUES ('7777', 'JJ', 'CLERK', '7902', TO_DATE('2019-06-27 06:46:14', 'YYYY-MM-DD HH24:MI:SS'), '900')
+INSERT INTO "SCOTT"."EMP" (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM) VALUES ('8888', 'J_JAMES', 'SALESMAN', '7698', TO_DATE('2019-06-07 06:46:56', 'YYYY-MM-DD HH24:MI:SS'), '1250', '200')
 */
 
 -- 6) OUTER JOIN : 조인 대상 테이블에서 공통 컬럼에 NULL 값인 데이터도
@@ -488,6 +508,52 @@ SELECT e.empno 사번
 7698	BLAKE	MANAGER	    KING	SALES	    CHICAGO
 7369	SMITH	CLERK	    FORD	RESEARCH	DALLAS
 */
+-- 상사가 없거나, 부서가 배정되지 않은 직원도 모두 출력하시오.
+-- 1.1 ) (+) 연산자로 해결
+SELECT e.empno  사번
+     , e.ename  이름
+     , e.job    직무
+     , e1.ename 상사이름
+     , d.dname  부서명
+     , d.loc    부서위치
+  FROM emp e
+     , emp e1
+     , dept d
+ WHERE e.mgr = e1.empno(+)
+   AND e.deptno = d.deptno(+)
+ ORDER BY d.deptno
+;
+-- 1.2) LEFT OUTER JOIN ~ ON 으로 해결
+SELECT e.empno  사번
+     , e.ename  이름
+     , e.job    직무
+     , e1.ename 상사이름
+     , d.dname  부서명
+     , d.loc    부서위치
+  FROM emp e LEFT JOIN emp e1 ON (e.mgr = e1.empno)
+             LEFT JOIN dept d ON (e.deptno = d.deptno)
+ ORDER BY d.deptno   
+;
+
+-- 1.3) 상사가 없거나, 부서가 배정되지 않은 직원도 모두 출력하며
+-- 상사가 없을 때 상사이름 대신  '-' 가
+-- 부서가 배정되지 않았을 때 부서명, 부서위치 대신 
+-- '-' 가 출력되도록 하시오
+SELECT e.empno  사번
+     , e.ename  이름
+     , e.job    직무
+     , NVL(e1.ename, '-') 상사이름
+     , NVL(d.dname, '-')  부서명
+     , NVL(d.loc, '-')    부서위치
+  FROM emp e
+     , emp e1
+     , dept d
+ WHERE e.mgr = e1.empno(+)
+   AND e.deptno = d.deptno(+)
+ ORDER BY d.deptno
+;
+
+
 -- 2. 사번, 이름, 급여, 급여등급, 부서명, 부서위치 를 조회하시오     
 SELECT e.empno 사번
      , e.ename 이름
@@ -531,18 +597,17 @@ SELECT e.empno 사번
 
 -- 상사가 없거나, 부서가 배정되지 않은 직원도 모두 출력하시오.
 -- (+) 연산자로 해결
-SELECT e.empno 사번
-     , e.ename 이름
-     , e.job 직무
-     , e1.ename 상사이름
-     , d.dname 부서명
-     , d.loc 부서위치
+SELECT e.empno  사번
+     , e.ename  이름
+     , e.sal    급여
+     , s.grade  급여등급
+     , d.dname  부서명
+     , d.loc    부서위치
   FROM emp e
-     , emp e1
      , dept d
- WHERE e.mgr = e1.empno(+)
-   AND e.deptno = d.deptno(+)
- ORDER BY e.empno
+     , salgrade s
+ WHERE e.deptno = d.deptno(+)
+   AND e.sal BETWEEN s.losal AND s.hisal
 ;
 /*
 사번,     이름, 직무, 상사이름, 부서명,   부서위치
@@ -563,30 +628,28 @@ SELECT e.empno 사번
 8888	J_JAMES	SALESMAN	BLAKE		
 */
 -- LEFT OUTER JOIN ~ ON 으로 해결
-SELECT e.empno 사번
-     , e.ename 이름
-     , e.job 직무
-     , e1.ename 상사이름
-     , d.dname 부서명
-     , d.loc 부서위치
-  FROM emp e LEFT JOIN emp e1 ON (e.mgr = e1.empno)
-             LEFT JOIN dept d ON (d.deptno = e.deptno)
- ORDER BY e.empno
+SELECT e.empno  사번
+     , e.ename  이름
+     , e.sal    급여
+     , s.grade  급여등급
+     , d.dname  부서명
+     , d.loc    부서위치
+  FROM emp e LEFT JOIN dept d ON (e.deptno = d.deptno)
+             JOIN salgrade s  ON (e.sal BETWEEN s.losal AND s.hisal)
 ;
 -- 부서가 배정되지 않은 직원은
 -- 부서명, 부서위치 대신 '-' 이 출력되도록 하시오.
-SELECT e.empno 사번
-     , e.ename 이름
-     , e.job 직무
-     , e1.ename 상사이름
-     , NVL(d.dname, '-') 부서명
-     , NVL(d.loc, '-') 부서위치
+SELECT e.empno  사번
+     , e.ename  이름
+     , e.sal    급여
+     , s.grade  급여등급
+     , NVL(d.dname, '-')  부서명
+     , NVL(d.loc, '-')    부서위치
   FROM emp e
-     , emp e1
      , dept d
- WHERE e.mgr = e1.empno(+)
-   AND e.deptno = d.deptno(+)
- ORDER BY d.deptno
+     , salgrade s
+ WHERE e.deptno = d.deptno(+)
+   AND e.sal BETWEEN s.losal AND s.hisal
 ;
 -- 2.4) 부서별 소속 인원을 출력하시오.
 --      이때 부서 명으로 출력하시오
@@ -635,7 +698,13 @@ RESEARCH	3
 SALES	    6
 부서 미배정	2
 */
-
+-- 원래 결과
+SELECT NVL(d.dname, '부서 미배정') "부서 명"
+     , COUNT(e.empno)"인원(명)"
+  FROM emp e FULL OUTER JOIN dept d ON (e.deptno = d.deptno)
+ GROUP BY d.dname
+ ORDER BY d.dname
+;
 
 
 
