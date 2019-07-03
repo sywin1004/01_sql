@@ -513,15 +513,18 @@ CREATE TABLE SUB_TABLE3
 /* 세 개의 테이블을 생성하는 구문을 작성
    3번 방식으로 작성
  GAME
+ 
  GAME_CODE NUMBER(2) PRIMARY KEY -- 게임 코드 10, 20, 30
  GAME_NAME VARCHAR2(200) NOT NULL-- 게임 이름
 ----------------------------------------
  GMEMBER 
+ 
  ID VARCHAR2(4)     PRIMARY KEY --회원의 아이디
  NAME VARCHAR2(15)  NOT NULL    --회원의 이름
  
  ----------------------------------------------
  MEMBER_GAME_HISTORY
+ 
  ID            VARCHAR2(4)     FOREIGN KEY 설정, FK 이름 : FK_ID
                                GMEMBER 테이블의 ID 컬럼을 참조하도록 설정
  YEAR          NUMBER(4)       -- 게임을 한 년도

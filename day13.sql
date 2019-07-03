@@ -721,7 +721,7 @@ COMMIT;
 --    ADDRESS : 천안시
 --    GENDER : M
 UPDATE member m
-   SET m.phone = 3581
+   SET m.phone = '3581'
      , m.address = '천안시'
      , m.gender = 'M'
  WHERE m.member_id = 'M009'
